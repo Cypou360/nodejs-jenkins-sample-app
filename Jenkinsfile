@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jenkins-demo-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
+        SONAR_HOST_URL = 'http://localhost:9000'  // ⚠️ TON IP ICI
+        SONAR_TOKEN = credentials('sonarqube')
     }
     
     stages {
@@ -25,23 +27,25 @@ pipeline {
             }
         }
         
-        stage('SonarQube Analysis') {
+        stage('SonarQube') {
             steps {
-                script {
-                    // Quality Gate attend 1min
-                    def scannerHome = tool 'SonarScanner'  // Nom outil Sonar configuré
-                    withSonarQubeEnv('SonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=node-app \
-                            -Dsonar.sources=. \
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        docker run --rm \
+                          -e SONAR_HOST_URL=$SONAR_HOST_URL \
+                          -e SONAR_LOGIN=$SONAR_TOKEN \
+                          -v "$(pwd)":/usr/src \
+                          sonarsource/sonar-scanner-cli:latest \
+                          -Dsonar.projectKey=node-app \
+                          -Dsonar.sources=. \
+                          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    '''
                 }
             }
         }
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
+                timeout(time: 3, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
