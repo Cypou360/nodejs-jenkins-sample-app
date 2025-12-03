@@ -25,9 +25,8 @@ pipeline {
         
         stage('Deploy') {
             sh """
-                docker stop ${DOCKER_IMAGE} || true
-                docker rm ${DOCKER_IMAGE} || true
-                docker run -d --name ${DOCKER_IMAGE} -p 80:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+            docker-compose down
+            docker-compose up -d --build
             """
         }
     }
