@@ -41,7 +41,7 @@ pipeline {
         }
     }
     
-    post {
+    /* post {
         // TODO: Partie bonus
-    }
+    }*/
 }
