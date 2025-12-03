@@ -28,25 +28,20 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarQubeScanner'
+                    // Quality Gate attend 1min
+                    def scannerHome = tool 'SonarScanner'  // Nom outil Sonar configuré
                     withSonarQubeEnv('SonarQube') {
-                        sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=nodejs-jenkins-sample-app \
-                            -Dsonar.projectName='Node.js Jenkins Sample App' \
-                            -Dsonar.projectVersion=1.0 \
+                        sh "${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=node-app \
                             -Dsonar.sources=. \
-                            -Dsonar.exclusions=node_modules/**,test.js \
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-                        """
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info"
                     }
                 }
             }
         }
-        
         stage('Quality Gate') {
             steps {
-                timeout(time: 1, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
