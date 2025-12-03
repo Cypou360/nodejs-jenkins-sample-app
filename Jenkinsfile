@@ -8,25 +8,27 @@ pipeline {
     
     stages {
         stage('Checkout') {
-            // TODO: Récupérer le code source
+            sh 'git pull'
         }
         
         stage('Install Dependencies') {
-            // TODO: Installer les dépendances
+            sh 'npm install'
         }
         
         stage('Run Tests') {
-            // TODO: Lancer les tests
+            sh 'npm test'
         }
         
         stage('Build Docker Image') {
-            // TODO: Construire l'image Docker
+            sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
         }
         
         stage('Deploy') {
-            // TODO: Déployer le conteneur
-            // Arrêter l'ancien conteneur s'il existe 
-            // Démarrer le nouveau conteneur avec la nouvelle version
+            sh """
+                docker stop ${DOCKER_IMAGE} || true
+                docker rm ${DOCKER_IMAGE} || true
+                docker run -d --name ${DOCKER_IMAGE} -p 80:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+            """
         }
     }
     
