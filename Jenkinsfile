@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jenkins-demo-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        SONAR_HOST_URL = 'http://localhost:9000'  // ⚠️ TON IP ICI
+        SONAR_HOST_URL = 'http://127.0.0.1:9000'
         SONAR_TOKEN = credentials('sonarqube')
     }
     
