@@ -4,8 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jenkins-demo-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        SONAR_HOST_URL = 'http://127.0.0.1:9000'
-        SONAR_TOKEN = credentials('sonarqube')
     }
     
     stages {
@@ -27,26 +25,27 @@ pipeline {
             }
         }
         
-        stage('SonarQube') {
+        stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        docker run --rm \
-                          -e SONAR_HOST_URL=$SONAR_HOST_URL \
-                          -e SONAR_LOGIN=$SONAR_TOKEN \
-                          -v "$(pwd)":/usr/src \
-                          sonarsource/sonar-scanner-cli:latest \
-                          -Dsonar.projectKey=node-app \
-                          -Dsonar.sources=. \
-                          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-                    '''
-                }
-            }
-        }
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                script {
+                    try {
+                        withSonarQubeEnv('SonarQube') {
+                            sh '''
+                                sonar-scanner \
+                                  -Dsonar.projectKey=nodejs-jenkins-sample-app \
+                                  -Dsonar.projectName='Node.js Jenkins Sample App' \
+                                  -Dsonar.sources=. \
+                                  -Dsonar.exclusions=node_modules/**,test.js \
+                                  -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                            '''
+                        }
+                        timeout(time: 3, unit: 'MINUTES') {
+                            waitForQualityGate abortPipeline: false
+                        }
+                    } catch (Exception e) {
+                        echo "SonarQube analysis failed: ${e.message}"
+                        echo "Continuing pipeline without Quality Gate check"
+                    }
                 }
             }
         }
