@@ -8,26 +8,36 @@ pipeline {
     
     stages {
         stage('Checkout') {
-            sh 'git pull'
+            steps {
+                checkout scm
+            }
         }
         
         stage('Install Dependencies') {
-            sh 'npm install'
+            steps {
+                sh 'npm install'
+            }
         }
         
         stage('Run Tests') {
-            sh 'npm test'
+            steps {
+                sh 'npm test'
+            }
         }
         
         stage('Build Docker Image') {
-            sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+            }
         }
         
         stage('Deploy') {
-            sh """
+            steps {
+                sh """
             docker-compose down
             docker-compose up -d --build
             """
+            }
         }
     }
     
